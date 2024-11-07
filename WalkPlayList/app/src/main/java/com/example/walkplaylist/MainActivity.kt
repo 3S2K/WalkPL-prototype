@@ -53,15 +53,23 @@ import android.widget.Toast
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 
 class MusicViewModel : ViewModel() {
     // 현재 재생 중인 노래 제목
     private val _currentSongTitle = mutableStateOf("어벤디 Facilition")
     val currentSongTitle: State<String> = _currentSongTitle
 
+    private val _isPlaying = mutableStateOf(false)
+    val isPlaying: State<Boolean> = _isPlaying
+
     // 현재 재생 중인 노래 제목 업데이트 함수
     fun updateCurrentSongTitle(newTitle: String) {
         _currentSongTitle.value = newTitle
+        _isPlaying.value = true
+    }
+    fun togglePlayState(isPlaying: Boolean) {
+        _isPlaying.value = isPlaying
     }
 }
 
@@ -69,6 +77,7 @@ class MusicViewModel : ViewModel() {
 @Composable
 fun PlayBox(navController: NavController, musicViewModel: MusicViewModel) {
     val currentSongTitle by musicViewModel.currentSongTitle
+    val isPlaying by musicViewModel.isPlaying
 
     Box(
         modifier = Modifier
@@ -102,12 +111,20 @@ fun PlayBox(navController: NavController, musicViewModel: MusicViewModel) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { /* TODO: Add play/pause action */ }) {
-                    Icon(
-                        Icons.Default.PlayArrow,
-                        contentDescription = "Play",
-                        modifier = Modifier.size(32.dp)
-                    )
+                IconButton(onClick = { musicViewModel.togglePlayState(!isPlaying) }) { // 버튼 상태 변경
+                    if (isPlaying) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow, // Material Design 시작 버튼 아이콘
+                            contentDescription = "Play",
+                            modifier = Modifier.size(32.dp)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow, // Material Design 시작 버튼 아이콘
+                            contentDescription = "Play",
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.width(3.dp))
                 IconButton(onClick = { /* TODO: Add next action */ }) {
@@ -121,6 +138,7 @@ fun PlayBox(navController: NavController, musicViewModel: MusicViewModel) {
         }
     }
 }
+
 
 class MainActivity : ComponentActivity() {
     private var mediaPlayer: MediaPlayer? = null
@@ -171,8 +189,8 @@ class MainActivity : ComponentActivity() {
                         composable("details") { DetailScreen(navController) }
                         composable("Pedometer") { StepCounter(navController) }
                         composable("news") { NewsScreen(navController, playlists) }
-                        composable("custom") { CustomScreen(navController) }
-                        composable("library") { LibraryScreen(navController, playlists) }
+                        composable("custom") { CustomScreen(navController, playlists, musicViewModel) }
+                        composable("library") { LibraryScreen(navController, playlists, musicViewModel) }
                         composable("create_playlist") { CreatePlaylistScreen(navController, playlists) }
                         composable("playlist/{playlistName}") { backStackEntry ->
                             PlaylistScreen(
@@ -199,12 +217,12 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun MainScreen(navController: NavController, playlists: MutableState<MutableMap<String, MutableList<String>>>, musicViewModel: MusicViewModel) {
-    val scope = rememberCoroutineScope()
-    var showNotification by remember { mutableStateOf(false) }
-    var notificationMessage by remember { mutableStateOf("") }
-
-    Column(modifier = Modifier.fillMaxSize()) {
+fun MainScreen(
+    navController: NavController,
+    playlists: MutableState<MutableMap<String, MutableList<String>>>,
+    musicViewModel: MusicViewModel
+) {
+    Column(modifier = Modifier.fillMaxSize().background(color = Color.Black)) {
         // Header 부분
         Row(
             modifier = Modifier
@@ -213,7 +231,7 @@ fun MainScreen(navController: NavController, playlists: MutableState<MutableMap<
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "WalkPL", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text(text = "WalkPL", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
             IconButton(onClick = { /* TODO: 사용자 프로필 액션 */ }) {
                 Icon(Icons.Default.Person, contentDescription = "Profile")
             }
@@ -227,11 +245,16 @@ fun MainScreen(navController: NavController, playlists: MutableState<MutableMap<
                     text = "최근 재생",
                     modifier = Modifier.padding(horizontal = 16.dp),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    color = Color.White
                 )
                 LazyRow(modifier = Modifier.padding(vertical = 8.dp)) {
                     items(8) { index ->
-                        val songTitle = "노래 제목 $index"
+                        val songTitle = if (index == 0) {
+                            "어벤디 Facilitation"
+                        } else {
+                            "노래 제목 $index"
+                        }
                         Column(
                             modifier = Modifier.padding(horizontal = 8.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
@@ -242,10 +265,10 @@ fun MainScreen(navController: NavController, playlists: MutableState<MutableMap<
                                 modifier = Modifier
                                     .size(64.dp)
                                     .clickable {
-                                        musicViewModel.updateCurrentSongTitle(songTitle)
+                                        musicViewModel.updateCurrentSongTitle(songTitle) // 노래 제목 업데이트 및 재생 상태 변경
                                     }
                             )
-                            Text(text = songTitle, fontSize = 12.sp)
+                            Text(text = songTitle, fontSize = 12.sp, color = Color.White)
                         }
                     }
                 }
@@ -258,7 +281,8 @@ fun MainScreen(navController: NavController, playlists: MutableState<MutableMap<
                     text = "숏츠",
                     modifier = Modifier.padding(horizontal = 16.dp),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    color = Color.White
                 )
                 LazyRow(modifier = Modifier.padding(vertical = 8.dp)) {
                     items(8) { index ->
@@ -276,7 +300,7 @@ fun MainScreen(navController: NavController, playlists: MutableState<MutableMap<
                                         musicViewModel.updateCurrentSongTitle(shortTitle)
                                     }
                             )
-                            Text(text = shortTitle, fontSize = 12.sp)
+                            Text(text = shortTitle, fontSize = 12.sp, color= Color.White)
                         }
                     }
                 }
@@ -289,7 +313,8 @@ fun MainScreen(navController: NavController, playlists: MutableState<MutableMap<
                     text = "뉴스",
                     modifier = Modifier.padding(horizontal = 16.dp),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    color = Color.White
                 )
                 LazyRow(modifier = Modifier.padding(vertical = 8.dp)) {
                     items(8) { index ->
@@ -307,7 +332,7 @@ fun MainScreen(navController: NavController, playlists: MutableState<MutableMap<
                                         musicViewModel.updateCurrentSongTitle(newsTitle)
                                     }
                             )
-                            Text(text = newsTitle, fontSize = 12.sp)
+                            Text(text = newsTitle, fontSize = 12.sp,color=Color.White)
                         }
                     }
                 }
@@ -334,18 +359,19 @@ fun PlayerScreen(navController: NavController, musicViewModel: MusicViewModel) {
 
     fun toggleAudio() {
         if (isPlaying) {
-            mediaPlayer?.pause()
+            mediaPlayer.pause()
         } else {
             mediaPlayer.start()
         }
-        isPlaying = !isPlaying
+        isPlaying = mediaPlayer.isPlaying
     }
 
+
     LaunchedEffect(isPlaying) {
-        duration = mediaPlayer?.duration ?: 0
+        duration = mediaPlayer.duration
         while (isPlaying) {
             currentPosition =
-                (mediaPlayer?.currentPosition?.toFloat() ?: 0f) / (duration.coerceAtLeast(1).toFloat())
+                (mediaPlayer.currentPosition.toFloat() / duration.coerceAtLeast(1).toFloat())
             delay(1000L)
         }
     }
@@ -444,7 +470,7 @@ fun PlayerScreen(navController: NavController, musicViewModel: MusicViewModel) {
             }
             Spacer(modifier = Modifier.width(8.dp))
             Box(
-                modifier = Modifier.padding(8.dp).size(40.dp).background(Color.Transparent)
+                modifier = Modifier.padding(8.dp).size(38.dp).background(Color.Transparent)
                     .clickable { /* 이전 곡 기능 추가 가능 */ }, contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -574,54 +600,63 @@ fun DetailScreen(navController: NavController) {
 }
 
 @Composable
-fun CustomScreen(navController: NavController) {
+fun CustomScreen(
+    navController: NavController,
+    playlists: MutableState<MutableMap<String, MutableList<String>>>,
+    musicViewModel: MusicViewModel
+) {
+    val scope = rememberCoroutineScope()
+    var showNotification by remember { mutableStateOf(false) }
+    var notificationMessage by remember { mutableStateOf("") }
+
+    // 입력 필드 상태
+    val contentState = remember { mutableStateOf(TextFieldValue()) }
+    val keywordState = remember { mutableStateOf(TextFieldValue()) }
+    val moodState = remember { mutableStateOf(TextFieldValue()) }
+    val titleState = remember { mutableStateOf(TextFieldValue()) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black) // 배경을 검은색으로 설정
+            .background(Color.Black)
             .padding(16.dp)
     ) {
-        // 입력 필드: 내용 입력
-        val contentState = remember { mutableStateOf(TextFieldValue()) }
-        Text(
-            text = "가사",
-            color = Color.White // 설명 텍스트 흰색
-        )
+        // 가사 입력
+        Text(text = "가사", color = Color.White)
         BasicTextField(
             value = contentState.value,
             onValueChange = { contentState.value = it },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(80.dp) // 텍스트 필드 높이를 크게 설정
-                .background(Color(0xFFFFC0CB), shape = RoundedCornerShape(8.dp)) // 핑크 배경 및 모서리 둥글게 설정
-                .padding(8.dp), // 내부 여백 설정
-            textStyle = TextStyle(
-                color = Color.White, // 입력 텍스트 색상 핑크
-                fontSize = 18.sp // 텍스트 크기 증가
-            ),
-            cursorBrush = SolidColor(Color.White) // 커서 색상 흰색
+                .height(80.dp)
+                .background(Color(0xFFFFC0CB), shape = RoundedCornerShape(8.dp))
+                .padding(8.dp),
+            textStyle = TextStyle(color = Color.White, fontSize = 18.sp),
+            cursorBrush = SolidColor(Color.White)
         )
-
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { /* TODO: Add create action */ },
+            onClick = {
+                notificationMessage = "가사가 생성되었습니다."
+                showNotification = true
+
+                scope.launch {
+                    kotlinx.coroutines.delay(2000) // 2초 후 알림 제거
+                    showNotification = false
+                }
+            },
             modifier = Modifier.align(Alignment.CenterHorizontally),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.White, // 버튼 배경색을 흰색으로 설정
-                contentColor = Color.Black    // 버튼 텍스트 색상을 검은색으로 설정
+                containerColor = Color.White,
+                contentColor = Color.Black
             )
         ) {
             Text(text = "가사 생성")
         }
-        Spacer(modifier = Modifier.height(16.dp))
 
-        // 입력 필드: 키워드 입력
-        val keywordState = remember { mutableStateOf(TextFieldValue()) }
-        Text(
-            text = "주제",
-            color = Color.White
-        )
+        // 주제 입력
+        Text(text = "주제", color = Color.White)
         BasicTextField(
             value = keywordState.value,
             onValueChange = { keywordState.value = it },
@@ -630,21 +665,13 @@ fun CustomScreen(navController: NavController) {
                 .height(80.dp)
                 .background(Color(0xFFFFC0CB), shape = RoundedCornerShape(8.dp))
                 .padding(8.dp),
-            textStyle = TextStyle(
-                color = Color.White,
-                fontSize = 18.sp
-            ),
+            textStyle = TextStyle(color = Color.White, fontSize = 18.sp),
             cursorBrush = SolidColor(Color.White)
         )
-
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 입력 필드: 곡 분위기 입력
-        val moodState = remember { mutableStateOf(TextFieldValue()) }
-        Text(
-            text = "스타일",
-            color = Color.White
-        )
+        // 스타일 입력
+        Text(text = "스타일", color = Color.White)
         BasicTextField(
             value = moodState.value,
             onValueChange = { moodState.value = it },
@@ -653,50 +680,87 @@ fun CustomScreen(navController: NavController) {
                 .height(80.dp)
                 .background(Color(0xFFFFC0CB), shape = RoundedCornerShape(8.dp))
                 .padding(8.dp),
-            textStyle = TextStyle(
-                color = Color.White,
-                fontSize = 18.sp
-            ),
+            textStyle = TextStyle(color = Color.White, fontSize = 18.sp),
             cursorBrush = SolidColor(Color.White)
         )
-
         Spacer(modifier = Modifier.height(16.dp))
 
-        val title = remember { mutableStateOf(TextFieldValue()) }
-        Text(
-            text = "제목",
-            color = Color.White
-        )
+        // 제목 입력
+        Text(text = "제목", color = Color.White)
         BasicTextField(
-            value = title.value,
-            onValueChange = { title.value = it },
+            value = titleState.value,
+            onValueChange = { titleState.value = it },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(80.dp)
                 .background(Color(0xFFFFC0CB), shape = RoundedCornerShape(8.dp))
                 .padding(8.dp),
-            textStyle = TextStyle(
-                color = Color.White,
-                fontSize = 18.sp
-            ),
+            textStyle = TextStyle(color = Color.White, fontSize = 18.sp),
             cursorBrush = SolidColor(Color.White)
         )
-
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 생성 버튼 추가
+        // 생성 버튼
         Button(
-            onClick = { /* TODO: Add create action */ },
+            onClick = {
+                val newSongTitle = titleState.value.text.trim()
+
+                if (newSongTitle.isNotEmpty()) {
+                    // "내가 만든 곡" 플레이리스트에 노래 추가
+                    playlists.value.getOrPut("내가 만든 곡") { mutableListOf() }.add(newSongTitle)
+
+                    notificationMessage = "$newSongTitle 이(가) 생성되었습니다."
+                    showNotification = true
+
+                    scope.launch {
+                        kotlinx.coroutines.delay(2000) // 2초 후 알림 제거
+                        showNotification = false
+                    }
+
+                    scope.launch {
+                        kotlinx.coroutines.delay(2000) // 2초 후 알림 제거
+                        navController.navigate("library")
+                    }
+                } else {
+                    notificationMessage = "제목을 입력해주세요!"
+                    showNotification = true
+
+                    scope.launch {
+                        kotlinx.coroutines.delay(2000) // 2초 후 알림 제거
+                        showNotification = false
+                    }
+                }
+            },
             modifier = Modifier.align(Alignment.CenterHorizontally),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.White, // 버튼 배경색을 흰색으로 설정
-                contentColor = Color.Black    // 버튼 텍스트 색상을 검은색으로 설정
+                containerColor = Color.White,
+                contentColor = Color.Black
             )
         ) {
             Text(text = "음악 생성")
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+
+        // 알림 메시지
+        if (showNotification) {
+            Text(
+                text = notificationMessage,
+                color = Color.White,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .background(Color.Black, shape = RoundedCornerShape(8.dp))
+                    .padding(8.dp),
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
+
+
+
 
 @Composable
 fun NewsScreen(navController: NavController, playlists: MutableState<MutableMap<String, MutableList<String>>>) {
@@ -730,17 +794,20 @@ fun NewsScreen(navController: NavController, playlists: MutableState<MutableMap<
 @Composable
 fun LibraryScreen(
     navController: NavController,
-    playlists: MutableState<MutableMap<String, MutableList<String>>>
+    playlists: MutableState<MutableMap<String, MutableList<String>>>,
+    musicViewModel: MusicViewModel
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .background(Color.White)
     ) {
         Text(
             text = "Artists Name",
             fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
         )
 
         // Play & Shuffle Buttons
@@ -765,8 +832,10 @@ fun LibraryScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Button to add a new playlist
-        Button(onClick = { navController.navigate("create_playlist") }) {
+        Button(
+            onClick = { navController.navigate("create_playlist") }, colors = ButtonDefaults.buttonColors(containerColor = Color.Cyan)) {
             Text(text = "플레이리스트 추가")
+
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -795,8 +864,30 @@ fun LibraryScreen(
                     Text(
                         text = playlistName,
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
                     )
+                }
+                // Songs within each playlist
+                songs.forEach { songTitle ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                // Update PlayBox with selected song
+                                musicViewModel.updateCurrentSongTitle(songTitle)
+                            }
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(text = songTitle, fontSize = 16.sp)
+                        IconButton(onClick = {
+                            musicViewModel.updateCurrentSongTitle(songTitle)
+                        }) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = "Play")
+                        }
+                    }
                 }
 
                 // Add a visual divider between playlists
@@ -810,6 +901,7 @@ fun LibraryScreen(
         Spacer(modifier = Modifier.weight(1f))
     }
 }
+
 
 
 @Composable
@@ -845,16 +937,16 @@ fun PlaylistScreen(
     playlists: MutableState<MutableMap<String, MutableList<String>>>
 ) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp)
+        modifier = Modifier.fillMaxSize().padding(16.dp).background(Color.Black)
     ) {
-        Text(text = playlistName, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        Text(text = playlistName, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
         playlists.value[playlistName]?.forEach { song ->
             Row(
                 modifier = Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null)
                 Spacer(modifier = Modifier.width(16.dp))
-                Text(text = song, fontSize = 18.sp)
+                Text(text = song, fontSize = 18.sp, color = Color.White)
             }
             Spacer(modifier = Modifier.height(8.dp))
         }

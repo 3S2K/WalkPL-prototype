@@ -54,6 +54,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import com.example.walkplaylist.ui.theme.Pink1
 
 class MusicViewModel : ViewModel() {
     // 현재 재생 중인 노래 제목
@@ -128,7 +129,7 @@ fun PlayBox(navController: NavController, musicViewModel: MusicViewModel) {
                 }
                 Spacer(modifier = Modifier.width(3.dp))
                 IconButton(onClick = { /* TODO: Add next action */ }) {
-                    Image(
+                    Icon(
                         painter = painterResource(id = R.drawable.ic_skip_next),
                         contentDescription = "Next",
                         modifier = Modifier.size(24.dp)
@@ -797,110 +798,125 @@ fun LibraryScreen(
     playlists: MutableState<MutableMap<String, MutableList<String>>>,
     musicViewModel: MusicViewModel
 ) {
-    Column(
+    // 최상위 Box로 배경을 설정
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .background(Color.White)
+            .background(Color.Black) // 전체 화면을 검은색으로 설정
     ) {
-        Text(
-            text = "Artists Name",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
-
-        // Play & Shuffle Buttons
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp) // Column의 내부 패딩
         ) {
-            Button(
-                onClick = { /* TODO: Add play all action */ },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+            Text(
+                text = "Artists Name",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White // 텍스트 색상 설정
+            )
+
+            // Play & Shuffle Buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(text = "Play", color = Color.White)
-            }
-            Button(
-                onClick = { /* TODO: Add shuffle action */ },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
-            ) {
-                Text(text = "Shuffle", color = Color.White)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Button to add a new playlist
-        Button(
-            onClick = { navController.navigate("create_playlist") }, colors = ButtonDefaults.buttonColors(containerColor = Color.Cyan)) {
-            Text(text = "플레이리스트 추가")
-
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Display each playlist including default ones
-        playlists.value.forEach { (playlistName, songs) ->
-            Column {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            // Navigate to the playlist details
-                            navController.navigate("playlist/$playlistName")
-                        }
-                        .padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Button(
+                    onClick = { /* TODO: Add play all action */ },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                 ) {
-                    // Placeholder for playlist image
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_album), // Use ic_album for all default lists
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp)
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    // Display playlist name
-                    Text(
-                        text = playlistName,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black
-                    )
+                    Text(text = "Play", color = Color.White)
                 }
-                // Songs within each playlist
-                songs.forEach { songTitle ->
+                Button(
+                    onClick = { /* TODO: Add shuffle action */ },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+                ) {
+                    Text(text = "Shuffle", color = Color.White)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Button to add a new playlist
+            Button(
+                onClick = { navController.navigate("create_playlist") },
+                colors = ButtonDefaults.buttonColors(containerColor = Pink1)
+            ) {
+                Text(text = "플레이리스트 추가")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Display each playlist including default ones
+            playlists.value.forEach { (playlistName, songs) ->
+                Column {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                // Update PlayBox with selected song
-                                musicViewModel.updateCurrentSongTitle(songTitle)
+                                // Navigate to the playlist details
+                                navController.navigate("playlist/$playlistName")
                             }
-                            .padding(horizontal = 16.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = songTitle, fontSize = 16.sp)
-                        IconButton(onClick = {
-                            musicViewModel.updateCurrentSongTitle(songTitle)
-                        }) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = "Play")
+                        // Placeholder for playlist image
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_album),
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        // Display playlist name
+                        Text(
+                            text = playlistName,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.White // 텍스트 색상 변경
+                        )
+                    }
+
+                    // Songs within each playlist
+                    songs.forEach { songTitle ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    // Update PlayBox with selected song
+                                    musicViewModel.updateCurrentSongTitle(songTitle)
+                                }
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .background(Color(0xFFFFC0CB), shape = RoundedCornerShape(12.dp))
+                                    .padding(8.dp)
+                            ) {
+                                Text(text = songTitle, fontSize = 16.sp, color = Color.Black)
+                            }
+                            IconButton(onClick = {
+                                musicViewModel.updateCurrentSongTitle(songTitle)
+                            }) {
+                                Icon(Icons.Default.PlayArrow, contentDescription = "Play", tint = Color.White)
+                            }
                         }
                     }
+
+                    // Add a visual divider between playlists
+                    Divider(
+                        color = Color.Gray,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
                 }
-
-                // Add a visual divider between playlists
-                Divider(
-                    color = Color.Gray,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
             }
-        }
 
-        Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(1f))
+        }
     }
 }
+
 
 
 
@@ -908,12 +924,14 @@ fun LibraryScreen(
 fun CreatePlaylistScreen(
     navController: NavController, playlists: MutableState<MutableMap<String, MutableList<String>>>) {
     val playlistNameState = remember { mutableStateOf(TextFieldValue()) }
+    Box(
+        modifier = Modifier.fillMaxSize().background(Color.Black)){
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "플레이리스트 이름:")
+        Text(text = "플레이리스트 이름:", color = Color.White)
         TextField(
             value = playlistNameState.value,
             onValueChange = { playlistNameState.value = it },
@@ -924,10 +942,11 @@ fun CreatePlaylistScreen(
                 playlists.value[playlistNameState.value.text] = mutableListOf()
                 navController.popBackStack()
             }
-        }) {
-            Text(text = "확인")
+        }, colors = ButtonDefaults.buttonColors(containerColor = Pink1)) {
+            Text(text = "확인", color = Color.White)
         }
     }
+}
 }
 
 @Composable
